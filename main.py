@@ -1,18 +1,38 @@
-import getpass,shutil,os
-from pyqadmin import admin
+import getpass
+import shutil
+import os
+from glob import glob
 
-def get_user():
-    return getpass.getuser()
-def get_disk_plus_user():
-    return "C:/Users/" + get_user()
-def locate_trash():
-    yandex = get_disk_plus_user() + "/AppData/Local/Yandex/YandexBrowser/Application"
-    yandex_roaming = get_disk_plus_user() + "/AppData/Roaming/Yandex"
-    yandex_local = get_disk_plus_user() + "/AppData/Local/Yandex"
-    yandex_programm_files = "C:/Program Files (x86)/Yandex"
-    trash = [yandex,yandex_roaming,yandex_local,yandex_programm_files]
-    return trash
+
+username = getpass.getuser()
+home = os.path.join("C:", "Users", username)
+
+
+def locate_user_trash():
+    return (
+        [
+            os.path.join(home, R"AppData\Local\Yandex"),
+            os.path.join(home, R"AppData\Roaming\Yandex"),
+        ]
+        + glob(os.path.join(home, R"AppData\Local\Temp\yandex*"))
+        + glob(os.path.join(home, R"AppData\Local\Temp\chrome_drag*"))
+    )
+
+
+def locate_system_trash():
+    return (
+        [
+            R"C:\Program Files (x86)\Yandex",
+        ]
+        + glob(R"C:\Windows\SystemTemp\yandex*")
+        + glob(R"C:\Windows\SystemTemp\chrome_url_fetcher*")
+    )
+
+
 @admin
 def remove():
-    shutil.rmtree(r"C:/Program Files (x86)/Yandex")
+    for folder in locate_system_trash():
+        shutil.rmtree(folder)
+
+
 remove()
