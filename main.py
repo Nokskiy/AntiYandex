@@ -1,11 +1,12 @@
 import getpass
-import shutil
+
+# import shutil
 import os
 from glob import glob
 
-
 username = getpass.getuser()
 home = os.path.join("C:", "Users", username)
+desktop = os.path.join(os.path.expanduser('~'), 'Desktop')
 
 
 def locate_user_trash():
@@ -29,10 +30,22 @@ def locate_system_trash():
     )
 
 
-@admin
+def locate_desktop_link():
+    return [
+        str(
+            glob(os.path.join(r"C:\Users\tsfka\OneDrive\Рабочий стол", '*.lnk'))
+        )
+    ]
+
+
 def remove():
-    for folder in locate_system_trash():
-        shutil.rmtree(folder)
+    print(desktop)
+    for link in locate_desktop_link():
+        print(link)
+    # for folder in locate_system_trash():
+    #    shutil.rmtree(folder)
+    # for folder in locate_user_trash():
+    #    shutil.rmtree(folder)
 
 
 remove()
