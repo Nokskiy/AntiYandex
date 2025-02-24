@@ -1,14 +1,12 @@
 import getpass
-
 import shutil
 import os
 from glob import glob
-from pyqadmin import admin
-import time
 from win32com.client import Dispatch
 
+
 username = getpass.getuser()
-home = os.path.join("C:", "Users", username)
+home = os.path.join(R"C:\Users", username)
 desktop = os.path.join(os.path.expanduser('~'), 'Desktop')
 
 
@@ -42,16 +40,22 @@ def locate_system_trash():
 
 def locate_desktop_link():
     return glob(os.path.join(R"C:\Users\tsfka\OneDrive\Рабочий стол", '*.lnk'))
-@admin
+
+
+def delete(file_path):
+        if os.path.isfile(file_path) or os.path.islink(file_path):
+            os.unlink(file_path)
+        elif os.path.isdir(file_path):
+            shutil.rmtree(file_path)
+
 def remove():
-    os.remove(os.path.join(R"C:\Users",username, R"AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Yandex.lnk"))
     for link in locate_desktop_link():
         if "Yandex" in get_shortcut_target(link):
-            os.remove(link)
+            delete(link)
+            pass
     for folder in locate_system_trash():
-        shutil.rmtree(folder)
+        delete(folder)
     for folder in locate_user_trash():
-        shutil.rmtree(folder)
-
+        delete(folder)
 
 remove()
