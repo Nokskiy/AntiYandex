@@ -1,16 +1,27 @@
 import getpass
 import shutil
 import os
+import subprocess
+import winreg
+import shlex
 from glob import glob
-from win32com.client import Dispatch
 
+# from win32com.client import Dispatch
+
+
+with winreg.OpenKey(
+    winreg.HKEY_CURRENT_USER,
+    R"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders",
+) as key:
+    desktop, _ = winreg.QueryValueEx(key, "Desktop")
+    desktop = os.path.expandvars(winreg.QueryValueEx(key, "Desktop")[0])
 
 username = getpass.getuser()
-home = os.path.join(R"C:\Users", username)
-desktop = os.path.join(os.path.expanduser('~'), 'Desktop')
+home = os.path.expanduser(os.environ['USERPROFILE'])
+usertemp = os.environ['TEMP']
 
 
-def get_shortcut_target(shortcut_path):
+def get_shortcut_target(shortcut_path: str):
     shell = Dispatch("WScript.Shell")
     shortcut = shell.CreateShortCut(shortcut_path)
     return shortcut.Targetpath
@@ -37,16 +48,16 @@ def locate_system_trash():
     )
 
 
-
 def locate_desktop_link():
-    return glob(os.path.join(R"C:\Users\tsfka\OneDrive\Рабочий стол", '*.lnk'))
+    return glob(os.path.join(desktop, '*.lnk'))
 
 
-def delete(file_path):
-        if os.path.isfile(file_path) or os.path.islink(file_path):
-            os.unlink(file_path)
-        elif os.path.isdir(file_path):
-            shutil.rmtree(file_path)
+def delete(file_path: str):
+    if os.path.isfile(file_path) or os.path.islink(file_path):
+        os.unlink(file_path)
+    elif os.path.isdir(file_path):
+        shutil.rmtree(file_path)
+
 
 def remove():
     for link in locate_desktop_link():
@@ -58,4 +69,19 @@ def remove():
     for folder in locate_user_trash():
         delete(folder)
 
-remove()
+
+systrash = locate_system_trash()
+script = os.path.abspath("checkadmin.py")
+args = ",".join(
+    map(
+        shlex.quote,
+        ([script] + systrash),
+    )
+)
+subprocess.run(
+    [
+        "powershell",
+        "-Command",
+        f"Start-Process -Verb RunAs -FilePath python -ArgumentList {args}",
+    ]
+)
